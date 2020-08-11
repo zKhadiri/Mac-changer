@@ -21,7 +21,7 @@ cfg = config.plugins.MacPlugin
 
 class Mac(Screen,ConfigListScreen):
     skin="""
-        <screen position="center,center" size="500,300" title="MAC CHANGER BY ZIKO" backgroundColor="#31000000" flags="wfNoBorder">
+        <screen position="center,center" size="500,200" title="MAC CHANGER BY ZIKO" backgroundColor="#31000000" flags="wfNoBorder">
             <widget name="config" position="10,10" size="480,200" zPosition="1" transparent="0" backgroundColor="#31000000" scrollbarMode="showOnDemand" />
         </screen>"""
         
