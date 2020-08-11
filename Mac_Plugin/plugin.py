@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 from Components.Network import iNetwork
-try:
-    from Components.About import getImageTypeString
-    imageVer = getImageTypeString()
-except ImportError:
-    from Components.About import about, getImageVersionString
-    imageVer = getImageVersionString()
-    
 from Screens.Screen import Screen
 from Plugins.Plugin import PluginDescriptor
 from Components.Label import Label
@@ -25,12 +18,10 @@ config.plugins.MacPlugin.mac = ConfigText()
 config.plugins.MacPlugin.new = ConfigText()
 cfg = config.plugins.MacPlugin
 
-def getVersionString():
-    return getImageVersion()
 
 class Mac(Screen,ConfigListScreen):
     skin="""
-        <screen position="center,center" size="500,200" title="MAC CHANGER BY ZIKO" backgroundColor="#31000000" flags="wfNoBorder">
+        <screen position="center,center" size="500,300" title="MAC CHANGER BY ZIKO" backgroundColor="#31000000" flags="wfNoBorder">
             <widget name="config" position="10,10" size="480,200" zPosition="1" transparent="0" backgroundColor="#31000000" scrollbarMode="showOnDemand" />
         </screen>"""
         
@@ -47,7 +38,7 @@ class Mac(Screen,ConfigListScreen):
         }, -1)
         
         self.init()
-    
+        
     def init(self):
         self.list = [ getConfigListEntry(_("interface"), cfg.intf) ]
         self.list.append(getConfigListEntry(_("current mac address"), cfg.mac))
@@ -68,20 +59,17 @@ class Mac(Screen,ConfigListScreen):
             x()
      
     def ok(self):
-        if imageVer.split(' ')[0].lower() =="openpli":
-            os.system('ifconfig eth0 down')
-            sleep(2)
-            os.system('ifconfig eth0 down hw ether '+str(self.mac_new))
-            sleep(2)
-            os.system('ifconfig eth0 up')
-            sleep(1)
-            self.check()
-            sleep(4)
-            os.system('/etc/init.d/networking restart')
-            self.session.open(MessageBox,_("Mac address successfully changed\nNew mac address : "+str(self.mac_new)), MessageBox.TYPE_INFO,timeout=10)
-            self.close(None)
-        else:
-            self.changeMac(self.mac_new)
+        os.system('ifconfig eth0 down')
+        sleep(2)
+        os.system('ifconfig eth0 down hw ether '+str(self.mac_new))
+        sleep(2)
+        os.system('ifconfig eth0 up')
+        self.check()
+        sleep(2)
+        os.system('/etc/init.d/networking restart')
+        self.session.open(MessageBox,_("Mac address successfully changed\nNew mac address : "+str(self.mac_new)), MessageBox.TYPE_INFO,timeout=10)
+        self.close(None)
+       
     
     def check(self):
         with open('/etc/network/interfaces', 'r') as file :
@@ -101,25 +89,6 @@ class Mac(Screen,ConfigListScreen):
                     write_file.write(new_line + "\n") 
             write_file.close()
     
-          
-    def changeMac(self, mac):
-        f = open('/etc/enigma2/hwmac', 'w')
-        f.write(mac)
-        f.close()
-        self.restartLan()
-
-    def restartLan(self):
-        iNetwork.restartNetwork(self.restartLanDataAvail)
-        self.restartLanRef = self.session.openWithCallback(self.close, MessageBox, _("Please wait while we change the MAC address..."), type = MessageBox.TYPE_INFO, enable_input = False)
-
-    def restartLanDataAvail(self, data):
-        if data is True:
-            iNetwork.getInterfaces(self.getInterfacesDataAvail)
-
-    def getInterfacesDataAvail(self, data):
-        if data is True:
-            self.restartLanRef.close(True)
-
     def exit(self):
         self.close(None)
         
