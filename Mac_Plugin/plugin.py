@@ -69,7 +69,7 @@ class Mac(Screen,ConfigListScreen):
      
     def ok(self):
         if imageVer.split(' ')[0].lower() =="openpli":
-            os.system('ifconfig eth0 down')#D0:27:24:00:60:C8
+            os.system('ifconfig eth0 down')
             sleep(2)
             os.system('ifconfig eth0 down hw ether '+str(self.mac_new))
             sleep(2)
