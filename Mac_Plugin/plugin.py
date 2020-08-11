@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from Components.Network import iNetwork
 from Screens.Screen import Screen
 from Plugins.Plugin import PluginDescriptor
 from Components.Label import Label
