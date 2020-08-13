@@ -60,8 +60,8 @@ class Mac(Screen,ConfigListScreen):
     
     def go(self,answer=False):
         if answer:
-            cfg.new.save()
             if re.match('\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}',cfg.new.value):
+		cfg.new.save()
                 os.system('ifconfig eth0 down')
                 sleep(2)
                 os.system('ifconfig eth0 down hw ether '+str(cfg.new.value))
