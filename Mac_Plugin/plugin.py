@@ -13,7 +13,7 @@ from time import sleep
 config.plugins.MacPlugin = ConfigSubsection()
 
 config.plugins.MacPlugin.intf = ConfigSelection(default = "1", choices = [("1",_("eth0"))])
-config.plugins.MacPlugin.mac = ConfigText()
+config.plugins.MacPlugin.mac = ConfigText(default='', fixed_size=False)
 config.plugins.MacPlugin.new = ConfigText()
 cfg = config.plugins.MacPlugin
 
@@ -43,39 +43,48 @@ class Mac(Screen,ConfigListScreen):
         self.list.append(getConfigListEntry(_("current mac address"), cfg.mac))
         self.list.append(getConfigListEntry(_("new mac address"), cfg.new))
         cfg.mac.value = str(dict(netifaces.ifaddresses('eth0')[netifaces.AF_LINK][0])['addr'].upper())
-        
+        cfg.mac.save()
         with open("/usr/lib/enigma2/python/Plugins/Extensions/Mac_Plugin/mac.txt") as f:
             self.mac_new = f.read()
-       
-        
-        cfg.new.value = str(self.mac_new.strip())
+
+        cfg.new.value = str(self.mac_new.upper().strip())
         self["config"].list = self.list
         self["config"].setList(self.list)
 
     def changedEntry(self):
-        cfg.mac.value = str(dict(netifaces.ifaddresses('eth0')[netifaces.AF_LINK][0])['addr'].upper())
         for x in self.onChangedEntry:
             x()
-     
+    
     def ok(self):
-        os.system('ifconfig eth0 down')
-        sleep(2)
-        os.system('ifconfig eth0 down hw ether '+str(self.mac_new))
-        sleep(2)
-        os.system('ifconfig eth0 up')
-        self.check()
-        sleep(2)
-        os.system('/etc/init.d/networking restart')
-        self.session.open(MessageBox,_("Mac address successfully changed\nNew mac address : "+str(self.mac_new)), MessageBox.TYPE_INFO,timeout=10)
-        self.close(None)
-       
+        self.session.openWithCallback(self.go, MessageBox, _('Are you sure you want to change current mac address : '+cfg.mac.value), MessageBox.TYPE_YESNO)
+    
+    def go(self,answer=False):
+        if answer:
+            cfg.new.save()
+            if re.match('\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}',cfg.new.value):
+                os.system('ifconfig eth0 down')
+                sleep(2)
+                os.system('ifconfig eth0 down hw ether '+str(cfg.new.value))
+                sleep(2)
+                os.system('ifconfig eth0 up')
+                self.check()
+                sleep(2)
+                os.system('/etc/init.d/networking restart')
+                try:
+                    current_ip = str(dict(netifaces.ifaddresses('eth0')[netifaces.AF_INET][0])['addr'])
+                except:
+                    current_ip = "unknown"
+                self.session.open(MessageBox,_("Mac address successfully changed\nNew mac address : "+cfg.new.value+'\nIP : '+current_ip), MessageBox.TYPE_INFO,timeout=10)
+                self.close(None)
+            else:
+                self.session.open(MessageBox,_("Not valide mac address"), MessageBox.TYPE_INFO,timeout=10)
     
     def check(self):
         with open('/etc/network/interfaces', 'r') as file :
             filedata = file.read()
         if "hwaddress ether" in filedata:
-            old_mac = re.findall(r'\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}',filedata)[0]
-            filedata = filedata.replace(old_mac, self.mac_new)
+            old_mac = re.findall(r'hwaddress ether (\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2})',filedata)[0]
+            filedata = filedata.replace(old_mac, cfg.new.value)
             with open('/etc/network/interfaces', 'w') as file:
                 file.write(filedata)
         else:
@@ -84,7 +93,7 @@ class Mac(Screen,ConfigListScreen):
             for line in inputfile:
                 write_file.write(line)
                 if 'iface eth0 inet dhcp' in line:
-                    new_line = "	hwaddress ether "+str(self.mac_new)         
+                    new_line = "	hwaddress ether "+cfg.new.value        
                     write_file.write(new_line + "\n") 
             write_file.close()
     
@@ -100,5 +109,5 @@ def Plugins(**kwargs):
 			name="MAC",
 			description="mac changer by ziko",
 			where = PluginDescriptor.WHERE_PLUGINMENU,
-			icon="ico.png",
+			icon="mac.png",
 			fnc=main)    
