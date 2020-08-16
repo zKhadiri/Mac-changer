@@ -81,7 +81,7 @@ class Mac(Screen,ConfigListScreen):
     def check(self):
         with open('/etc/network/interfaces', 'r') as file :
             filedata = file.read()
-        if 'iface eth0 inet dhcp' in line or "iface eth0 inet static" in line :
+        if "hwaddress ether" in filedata:
             old_mac = re.findall(r'hwaddress ether (\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2})',filedata)[0]
             filedata = filedata.replace(old_mac, cfg.new.value)
             with open('/etc/network/interfaces', 'w') as file:
@@ -91,7 +91,7 @@ class Mac(Screen,ConfigListScreen):
             write_file = open('/etc/network/interfaces','w')
             for line in inputfile:
                 write_file.write(line)
-                if 'iface eth0 inet dhcp' in line:
+                if 'iface eth0 inet dhcp' in line or "iface eth0 inet static" in line :
                     new_line = "	hwaddress ether "+cfg.new.value        
                     write_file.write(new_line + "\n") 
             write_file.close()
