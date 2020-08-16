@@ -43,7 +43,6 @@ class Mac(Screen,ConfigListScreen):
         self.list.append(getConfigListEntry(_("current mac address"), cfg.mac))
         self.list.append(getConfigListEntry(_("new mac address"), cfg.new))
         cfg.mac.value = str(dict(netifaces.ifaddresses('eth0')[netifaces.AF_LINK][0])['addr'].upper())
-        cfg.mac.save()
         with open("/usr/lib/enigma2/python/Plugins/Extensions/Mac_Plugin/mac.txt") as f:
             self.mac_new = f.read()
 
